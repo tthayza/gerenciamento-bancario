@@ -38,8 +38,8 @@ class Logger {
 class ContaBancaria implements ContaBancaria{
   private numeroConta: string
   private saldo: number
-  titular: string
-  logger = new Logger()
+  protected titular: string
+  protected logger = new Logger()
   constructor(numeroConta:string, titular:string, saldo: number) {
     this.numeroConta = numeroConta
     this.titular = titular
