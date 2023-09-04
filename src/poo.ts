@@ -1,94 +1,128 @@
 interface IOperacoesBancarias {
-  depositar():void;
+  depositar(valor: number): void
 
-  sacar():void;
+  sacar(valor: number): void
 }
 
 class Banco {
-  private contas: string[]
-  constructor() {
-    this.contas = []
+  contas: ContaBancaria[] = []
+
+  adicionarConta(conta: ContaBancaria) {
+    this.contas.push(conta)
   }
-  listarContas():Array<string> {
-    for(const conta of this.contas) {
-      console.log(conta)
-    }
-    return this.contas
+
+  listarContas() {
+    return this.contas.map(
+      (conta) =>
+        `Número da conta: ${conta.getNumeroConta()},  Saldo Atual: ${conta.getSaldo()}`
+    )
   }
 }
 
 class Logger {
-  logs: string[]
+  logs: string[] = []
 
-  constructor() {
-    this.logs = []
-  }
-
-  registrarLog(operacao:string, valor: number) {
+  registrarLogOperacao(operacao: string, valor: number) {
     this.logs.push(
-    `${operacao} R$${valor} ${new Date().toLocaleString('pt-BR')}`)
+      `${operacao} R$${valor} ${new Date().toLocaleString('pt-BR')}`
+    )
     console.log(`${operacao} realizado com sucesso!`)
   }
 
-  retornaOperacaoInvalida(operacao:string) {
+  operacaoInvalida(operacao: string) {
     console.log(`Operação de ${operacao} inválida para o valor informado!`)
   }
-}
 
-class ContaBancaria implements ContaBancaria{
+  listarLogs() {
+    return this.logs
+  }
+}
+class ContaBancaria implements IOperacoesBancarias {
   private numeroConta: string
   private saldo: number
   protected titular: string
   protected logger = new Logger()
-  constructor(numeroConta:string, titular:string, saldo: number) {
+  constructor(numeroConta: string, titular: string, saldo: number) {
     this.numeroConta = numeroConta
     this.titular = titular
     this.saldo = saldo
   }
 
-  getSaldo () { return this.saldo}
+  getSaldo() {
+    return this.saldo
+  }
 
-  setSaldo (novoSaldo:number)  {
+  setSaldo(novoSaldo: number) {
     this.saldo = novoSaldo
   }
-  consultarSaldo ():number { return this.getSaldo() }
-
-
-  getNumeroConta() { `O número da conta é ${this.numeroConta}`}
-
-  setNumeroConta(numeroContaBancaria:string) {
-    if (numeroContaBancaria.length > 20) return 'Número de conta inválido'
-    this.numeroConta = numeroContaBancaria
-    return 'Número da conta cadastrado!'
+  consultarSaldo(): number {
+    return this.getSaldo()
   }
 
-  depositar(valorDepositado: number)  {
-    if(valorDepositado <= 0) this.logger.retornaOperacaoInvalida('depósito')
+  getNumeroConta() {
+    return this.numeroConta
+  }
+
+  setNumeroConta(numeroContaBancaria: string) {
+    this.numeroConta = numeroContaBancaria
+  }
+
+  depositar(valorDepositado: number) {
+    if (valorDepositado <= 0) this.logger.operacaoInvalida('depósito')
     else {
       this.saldo += valorDepositado
-      this.logger.registrarLog('Depósito', valorDepositado)
-      console.log(this.logger.logs)
+      this.logger.registrarLogOperacao('Depósito', valorDepositado)
     }
   }
 
-  sacar(valorSaque:number) {
-    if (valorSaque > this.saldo) this.logger.retornaOperacaoInvalida('saque')
-    else this.logger.registrarLog('saque', valorSaque)
-
+  sacar(valorSaque: number) {
+    if (valorSaque > this.saldo) this.logger.operacaoInvalida('saque')
+    else {
+      this.logger.registrarLogOperacao('Saque', valorSaque)
+      this.saldo -= valorSaque
+    }
   }
 }
 
 class ContaPoupanca extends ContaBancaria {
-  juros: number
+  private juros: number
 
-  constructor(numeroConta:string, titular:string, saldo: number, juros:number) {
+  constructor(
+    numeroConta: string,
+    titular: string,
+    saldo: number,
+    juros: number
+  ) {
     super(numeroConta, titular, saldo)
     this.juros = juros
   }
-  consultarSaldoComJuros():number {
-    return (this.consultarSaldo() * 1) + this.juros
+  consultarSaldo(): number {
+    return this.getSaldo() + this.juros
   }
 }
 
-const conta2 = new ContaBancaria('12354564549649696496966', 'Matheus', 100)
-conta2.depositar(500)
+console.log('--- Conta Corrente ---')
+
+const contaCorrente = new ContaBancaria('1234567890123456789', 'Matheus', 100)
+console.log(contaCorrente.consultarSaldo())
+contaCorrente.depositar(500)
+console.log(contaCorrente.consultarSaldo())
+contaCorrente.sacar(200)
+console.log(contaCorrente.consultarSaldo())
+
+console.log('--- Conta Poupança ---')
+
+const contaPoupanca = new ContaPoupanca('12453478111', 'Thayza', 200, 15)
+console.log(contaPoupanca.consultarSaldo())
+contaPoupanca.depositar(800)
+console.log(contaPoupanca.consultarSaldo())
+contaPoupanca.sacar(2000)
+console.log(contaPoupanca.consultarSaldo())
+
+console.log('--- Banco ---')
+
+const cosmoBank = new Banco()
+cosmoBank.adicionarConta(contaCorrente)
+cosmoBank.adicionarConta(contaPoupanca)
+
+console.log(cosmoBank.listarContas())
